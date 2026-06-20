@@ -205,7 +205,7 @@ export default function HeroSection() {
                 }}
               >
                 <img
-                  src="/assets/photo.png"
+                  src="../src/assets/photo.png"
                   alt="Muhammed Danish KP — Software Developer"
                   loading="eager"
                   className="block object-cover object-top"
