@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import FadeIn from '../components/FadeIn';
 import ContactButton from '../components/ContactButton';
+import photoImg from '../assets/photo.png';
 
 const TECH_BADGES = ['C++', 'C', 'PHP', 'React', 'Node.js', 'MongoDB', 'Firebase'];
 
@@ -205,7 +206,7 @@ export default function HeroSection() {
                 }}
               >
                 <img
-                  src="https://i.ibb.co/BVd0dTW5/photo.png"
+                  src={photoImg}
                   alt="Muhammed Danish KP — Software Developer"
                   loading="eager"
                   className="block object-cover object-top"
