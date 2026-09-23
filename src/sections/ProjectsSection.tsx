@@ -1,5 +1,6 @@
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import FadeIn from '../components/FadeIn';
 import LiveProjectButton from '../components/LiveProjectButton';
 
@@ -10,123 +11,181 @@ const PROJECTS = [
     name: 'Ilmify',
     url: 'https://ilmify.me',
     tech: ['Firebase', 'Firebase Realtime db'],
-    col1img1: 'https://i.ibb.co/4w9hbTRd/Screenshot-2026-06-20-202339.png',
-    col1img2: 'https://i.ibb.co/FGTPbsj/Screenshot-2026-06-20-201733.png',
-    col2img: 'https://i.ibb.co/v4BFN6KY/Screenshot-2026-06-20-201519.png',
+    images: [
+      'https://i.ibb.co/v4BFN6KY/Screenshot-2026-06-20-201519.png',
+      'https://i.ibb.co/4w9hbTRd/Screenshot-2026-06-20-202339.png',
+      'https://i.ibb.co/FGTPbsj/Screenshot-2026-06-20-201733.png',
+    ],
   },
   {
     num: '02',
     category: 'Firebase Realtime',
-    name: 'E-Com Platform',
+    name: 'Toymall',
     url: 'https://toymall.co.in',
-    tech: ['Firebase'],
-    col1img1: 'https://i.ibb.co/PZzSMJhz/Screenshot-2026-06-20-205926.png',
-    col1img2: 'https://i.ibb.co/0p0SMcS3/Screenshot-2026-06-20-210042.png',
-    col2img: 'https://i.ibb.co/Fb93N0K8/Screenshot-2026-06-20-210207.png',
-  }
+    tech: ['Firebase', 'Ecom website'],
+    images: [
+      'https://i.ibb.co/Fb93N0K8/Screenshot-2026-06-20-210207.png',
+      'https://i.ibb.co/PZzSMJhz/Screenshot-2026-06-20-205926.png',
+      'https://i.ibb.co/0p0SMcS3/Screenshot-2026-06-20-210042.png',
+    ],
+  },
+  {
+    num: '03',
+    category: 'Firebase Realtime',
+    name: 'Miyakids',
+    url: 'https://miyakids.com',
+    tech: ['Firebase', 'Ecom website'],
+    images: [
+      'https://i.ibb.co/Xf2xRTTc/Screenshot-2026-09-23-193213.webp',
+      'https://i.ibb.co/rCWfFrg/Screenshot-2026-09-23-192736.webp',
+    ],
+  },
+  {
+    num: '04',
+    category: 'Next Js',
+    name: 'Mahal  Administration',
+    url: 'https://mahal-rho.vercel.app',
+    tech: ['React', 'Next Js', 'Supabase', 'Postgres'],
+    images: [
+      'https://i.ibb.co/6SPh0Zj/Screenshot-2026-09-23-194210.webp',
+      'https://i.ibb.co/8g8wXMzR/Screenshot-2026-09-23-194229.webp',
+      'https://i.ibb.co/b5z6Hc7V/Screenshot-2026-09-23-194414.webp',
+    ],
+  },
 ];
 
-const TOTAL_CARDS = PROJECTS.length;
-
 interface ProjectCardProps {
-  project: (typeof PROJECTS)[0];
+  project: (typeof PROJECTS)[number];
   index: number;
-  totalCards: number;
 }
 
-function ProjectCard({ project, index, totalCards }: ProjectCardProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isLast = index === totalCards - 1;
+function ProjectCard({ project, index }: ProjectCardProps) {
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end start'],
-  });
+  const goToSlide = (slideIndex: number) => {
+    const slide = galleryRef.current?.children[slideIndex] as HTMLElement | undefined;
+    slide?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  };
 
-  const scale = useTransform(scrollYProgress, [0, 1], [1, !isLast ? 0.88 : 1]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, !isLast ? 0.65 : 1]);
+  const updateActiveSlide = () => {
+    const gallery = galleryRef.current;
+    if (!gallery) return;
 
-  const borderRadius = 'clamp(20px, 3vw, 40px)';
+    const slides = Array.from(gallery.children) as HTMLElement[];
+    const closestIndex = slides.reduce((closest, slide, slideIndex) => {
+      const galleryLeft = gallery.getBoundingClientRect().left;
+      const distance = Math.abs(slide.getBoundingClientRect().left - galleryLeft);
+      const closestDistance = Math.abs(slides[closest].getBoundingClientRect().left - galleryLeft);
+      return distance < closestDistance ? slideIndex : closest;
+    }, 0);
+
+    setActiveSlide(closestIndex);
+  };
+
+  const showAdjacentSlide = (direction: -1 | 1) => {
+    const nextIndex = (activeSlide + direction + project.images.length) % project.images.length;
+    goToSlide(nextIndex);
+  };
 
   return (
-    <div
-      ref={containerRef}
-      className="sticky top-0 h-screen"
-      style={{ zIndex: index + 1 }}
+    <motion.article
+      initial={{ opacity: 0, y: 34 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.18 }}
+      transition={{ duration: 0.65, delay: index * 0.08, ease: [0.22, 0.7, 0.25, 1] }}
+      whileHover={{ y: -3 }}
+      className="project-card grid overflow-hidden rounded-[26px] border border-[#D7E2EA]/10 bg-[#111315] shadow-[0_24px_90px_rgba(0,0,0,0.22)] transition-colors duration-300 hover:border-[#D7E2EA]/25 sm:rounded-[32px]"
     >
-      {/*
-       * The motion.div + inner card both use flex-col + flex-1 so the card
-       * always fills the full h-screen — no blank gap left underneath.
-       */}
-      <motion.div
-        className="h-full flex flex-col px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4 sm:pb-5"
-        style={{ scale, opacity, originY: 0 }}
-      >
-        <div
-          className="w-full border border-[#D7E2EA]/20 bg-[#111111] p-4 sm:p-5 md:p-6 flex flex-col flex-1 min-h-0"
-          style={{ borderRadius }}
-        >
-          {/* Header row — fixed height */}
-          <div className="flex flex-wrap items-start justify-between gap-3 mb-3 flex-shrink-0">
-            <div className="flex items-center gap-3 sm:gap-5">
-              <span
-                className="font-black text-[#D7E2EA] leading-none flex-shrink-0"
-                style={{ fontSize: 'clamp(2.2rem, 7vw, 100px)' }}
-              >
-                {project.num}
-              </span>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[#D7E2EA]/45 font-light uppercase tracking-widest" style={{ fontSize: 'clamp(0.55rem, 0.9vw, 0.8rem)' }}>
-                  {project.category}
-                </span>
-                <span className="text-[#D7E2EA] font-black uppercase leading-none tracking-tight" style={{ fontSize: 'clamp(0.9rem, 2.2vw, 2.4rem)' }}>
-                  {project.name}
-                </span>
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {project.tech.map((t) => (
-                    <span key={t} className="text-[#D7E2EA]/50 border border-[#D7E2EA]/20 rounded-full px-2 py-0.5" style={{ fontSize: 'clamp(0.5rem, 0.75vw, 0.68rem)' }}>
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <LiveProjectButton url={project.url} />
+      <div className="project-details flex flex-col justify-between gap-8 p-5 sm:p-7 lg:p-9">
+        <div>
+          <div className="mb-6 flex items-center gap-3">
+            <span className="font-black leading-none text-[#D7E2EA]/80" style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}>
+              {project.num}
+            </span>
+            <span className="h-px flex-1 bg-gradient-to-r from-[#D7E2EA]/35 to-transparent" />
           </div>
 
-          {/* Image grid — grows to fill all remaining card height */}
-          <div className="flex gap-2 sm:gap-3 flex-1 min-h-0">
-            {/* Left column — two stacked images */}
-            <div className="flex flex-col gap-2 sm:gap-3 min-h-0" style={{ width: '40%' }}>
-              <img
-                src={project.col1img1}
-                alt={`${project.name} 1`}
-                loading="lazy"
-                className="w-full object-cover flex-1 min-h-0"
-                style={{ borderRadius }}
-              />
-              <img
-                src={project.col1img2}
-                alt={`${project.name} 2`}
-                loading="lazy"
-                className="w-full object-cover flex-1 min-h-0"
-                style={{ borderRadius }}
-              />
-            </div>
-            {/* Right column — single tall image */}
-            <div className="flex flex-col min-h-0" style={{ width: '60%' }}>
-              <img
-                src={project.col2img}
-                alt={`${project.name} 3`}
-                loading="lazy"
-                className="w-full object-cover flex-1 min-h-0"
-                style={{ borderRadius }}
-              />
-            </div>
+          <p className="mb-2 text-[0.65rem] font-medium uppercase tracking-[0.22em] text-[#D7E2EA]/45 sm:text-xs">
+            {project.category}
+          </p>
+          <h3 className="max-w-[14ch] text-3xl font-black uppercase leading-[0.95] tracking-tight text-[#D7E2EA] sm:text-4xl lg:text-[2.75rem]">
+            {project.name}
+          </h3>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {project.tech.map((technology) => (
+              <span
+                key={technology}
+                className="rounded-full border border-[#D7E2EA]/15 px-3 py-1 text-[0.65rem] text-[#D7E2EA]/60 sm:text-xs"
+              >
+                {technology}
+              </span>
+            ))}
           </div>
         </div>
-      </motion.div>
-    </div>
+
+        <LiveProjectButton url={project.url} className="project-live-button self-start" />
+      </div>
+
+      <div className="project-gallery-wrap min-w-0 p-3 sm:p-4 lg:p-5">
+        <div
+          ref={galleryRef}
+          className="project-gallery"
+          onScroll={updateActiveSlide}
+          aria-label={`${project.name} screenshots`}
+        >
+          {project.images.map((src, imageIndex) => (
+            <div className="project-gallery-slide" key={src}>
+              <img
+                src={src}
+                alt={`${project.name} screenshot ${imageIndex + 1}`}
+                loading="lazy"
+                draggable={false}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 px-1 sm:mt-4 sm:px-2">
+          <span className="min-w-[3.5rem] font-mono text-[0.7rem] tracking-wider text-[#D7E2EA]/45" aria-live="polite">
+            {String(activeSlide + 1).padStart(2, '0')} <span className="text-[#D7E2EA]/20">/</span> {String(project.images.length).padStart(2, '0')}
+          </span>
+
+          <div className="flex items-center gap-2" aria-label="Choose screenshot">
+            {project.images.map((_, slideIndex) => (
+              <button
+                key={slideIndex}
+                type="button"
+                className={`project-slide-dot ${slideIndex === activeSlide ? 'is-active' : ''}`}
+                onClick={() => goToSlide(slideIndex)}
+                aria-label={`Show screenshot ${slideIndex + 1}`}
+                aria-pressed={slideIndex === activeSlide}
+              />
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="project-slide-arrow"
+              onClick={() => showAdjacentSlide(-1)}
+              aria-label="Previous screenshot"
+            >
+              <ArrowLeft size={16} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              className="project-slide-arrow"
+              onClick={() => showAdjacentSlide(1)}
+              aria-label="Next screenshot"
+            >
+              <ArrowRight size={16} strokeWidth={1.8} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.article>
   );
 }
 
@@ -134,25 +193,29 @@ export default function ProjectsSection() {
   return (
     <section
       id="projects"
-      className="bg-[#0C0C0C] rounded-t-[36px] sm:rounded-t-[48px] md:rounded-t-[56px] -mt-8 sm:-mt-10 md:-mt-12 relative"
-      style={{ zIndex: 10 }}
+      className="relative z-10 -mt-8 rounded-t-[36px] bg-[#0C0C0C] px-4 pb-16 pt-10 sm:-mt-10 sm:rounded-t-[48px] sm:px-6 sm:pb-24 sm:pt-14 md:-mt-12 md:rounded-t-[56px] md:px-8"
     >
-      {/* Heading */}
-      <div className="px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 pb-6 sm:pb-8">
-        <FadeIn scroll delay={0} y={40}>
-          <h2
-            className="hero-heading font-black uppercase leading-none tracking-tight text-center"
-            style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-          >
-            Projects
-          </h2>
-        </FadeIn>
-      </div>
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 sm:mb-12">
+          <FadeIn scroll delay={0} y={32}>
+            <p className="mb-2 text-center text-[0.65rem] font-medium uppercase tracking-[0.28em] text-[#D7E2EA]/40 sm:text-xs">
+              A few things I’ve built
+            </p>
+            <h2
+              className="hero-heading text-center font-black uppercase leading-[0.9] tracking-tight"
+              style={{ fontSize: 'clamp(3.5rem, 12vw, 9rem)' }}
+            >
+              Projects
+            </h2>
+          </FadeIn>
+        </div>
 
-      {/* Stacking cards */}
-      {PROJECTS.map((project, i) => (
-        <ProjectCard key={project.num} project={project} index={i} totalCards={TOTAL_CARDS} />
-      ))}
+        <div className="flex flex-col gap-5 sm:gap-7 lg:gap-9">
+          {PROJECTS.map((project, index) => (
+            <ProjectCard key={project.num} project={project} index={index} />
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
